@@ -19,7 +19,7 @@ import {
 } from '@aws-amplify/ui-react';
 
 
-const App = ({ signOut }) => {
+const App = ({ signOut, user }) => {
   const [notes, setNotes] = useState([]);
 
   useEffect(() => {
@@ -71,7 +71,7 @@ const App = ({ signOut }) => {
 
   return (
     <View className="App">
-      <Heading level={1}>My Notes App</Heading>
+      <Heading level={1}>Notes of User: {user.username}</Heading>
       <View as="form" margin="3rem 0" onSubmit={createNote}>
         <Flex direction="row" justifyContent="center">
           <TextField
