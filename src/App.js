@@ -27,7 +27,7 @@ const App = ({ signOut, user }) => {
   }, []);
 
   async function fetchNotes() {
-    const apiData = await API.graphql({ query: listNotes });
+    const apiData = await API.graphql({ query: listNotes, authMode: 'AMAZON_COGNITO_USER_POOLS' });
     const notesFromAPI = apiData.data.listNotes.items;
     await Promise.all(
       notesFromAPI.map(async (note) => {
@@ -54,6 +54,7 @@ const App = ({ signOut, user }) => {
     await API.graphql({
       query: createNoteMutation,
       variables: { input: data },
+      authMode: 'AMAZON_COGNITO_USER_POOLS'
     });
     fetchNotes();
     event.target.reset();
@@ -66,6 +67,7 @@ const App = ({ signOut, user }) => {
     await API.graphql({
       query: deleteNoteMutation,
       variables: { input: { id } },
+      authMode: 'AMAZON_COGNITO_USER_POOLS'
     });
   }
 
