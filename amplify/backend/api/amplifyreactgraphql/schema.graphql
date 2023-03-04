@@ -25,3 +25,10 @@ type Like @model @auth(rules: [
     content: String!
     post: Post @belongsTo
 }
+
+type Login @model @auth(rules: [
+  { allow: public } ] ){
+    id: ID!
+    userName: String!
+    loginTime: Int!
+}

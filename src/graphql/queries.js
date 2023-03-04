@@ -126,3 +126,32 @@ export const listLikes = /* GraphQL */ `
     }
   }
 `;
+export const getLogin = /* GraphQL */ `
+  query GetLogin($id: ID!) {
+    getLogin(id: $id) {
+      id
+      userName
+      loginTime
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const listLogins = /* GraphQL */ `
+  query ListLogins(
+    $filter: ModelLoginFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listLogins(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        userName
+        loginTime
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;

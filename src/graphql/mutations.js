@@ -199,3 +199,45 @@ export const deleteLike = /* GraphQL */ `
     }
   }
 `;
+export const createLogin = /* GraphQL */ `
+  mutation CreateLogin(
+    $input: CreateLoginInput!
+    $condition: ModelLoginConditionInput
+  ) {
+    createLogin(input: $input, condition: $condition) {
+      id
+      userName
+      loginTime
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const updateLogin = /* GraphQL */ `
+  mutation UpdateLogin(
+    $input: UpdateLoginInput!
+    $condition: ModelLoginConditionInput
+  ) {
+    updateLogin(input: $input, condition: $condition) {
+      id
+      userName
+      loginTime
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const deleteLogin = /* GraphQL */ `
+  mutation DeleteLogin(
+    $input: DeleteLoginInput!
+    $condition: ModelLoginConditionInput
+  ) {
+    deleteLogin(input: $input, condition: $condition) {
+      id
+      userName
+      loginTime
+      createdAt
+      updatedAt
+    }
+  }
+`;

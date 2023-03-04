@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import "@aws-amplify/ui-react/styles.css";
-import { listNotes, listPosts } from "./graphql/queries";
+import { listNotes, listLogins } from "./graphql/queries";
 import { listPostsWithLikes } from "./graphql/CustomQueries";
 import {
   createNote as createNoteMutation,
@@ -9,9 +9,12 @@ import {
   createPost as createPostMutation,
   deletePost as deletePostMutation,
   createLike as createLikeMutation,
-  deleteLike as deleteLikeMutation
+  deleteLike as deleteLikeMutation,
+  createLogin as createLoginMutation,
+  updateLogin as updateLoginMutation,
+  deleteLogin as deleteLoginMutation
 } from "./graphql/mutations";
-import { API, Storage } from 'aws-amplify';
+import { API, Storage , Auth} from 'aws-amplify'; //added auth to this to allow session information
 import {
   Button,
   Flex,
@@ -25,13 +28,59 @@ import {
 
 
 const App = ({ signOut, user }) => {
+
   const [notes, setNotes] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [logins, setLogins] = useState([]);
 
   useEffect(() => {
+    loginHandler(); //added call to session handler that uploads login to database
     fetchNotes();
     fetchPosts();
   }, []);
+
+  async function loginHandler() {
+    const token = await Auth.currentSession();
+    
+    const filterByUser = {
+      filter: {
+        userName: {
+          eq: user.username
+        }
+      }
+    };
+
+    const previousLogin = await API.graphql({ query: listLogins, authMode: 'API_KEY', variables: filterByUser });
+    
+    if(previousLogin && previousLogin.data.listLogins.items.length > 0) {
+      console.log("Updating an entry")
+      const loginData = {
+        id: previousLogin.data.listLogins.items[0].id,
+        loginTime: token.getAccessToken().payload.auth_time
+      };
+
+      await API.graphql({
+        query: updateLoginMutation,
+        variables: { input: loginData },
+        authMode: 'API_KEY'
+      });
+
+    } else {
+      console.log("Creating the entry")
+      const loginData = {
+        userName: user.username,
+        loginTime: token.getAccessToken().payload.auth_time
+      };
+      
+      await API.graphql({
+        query: createLoginMutation,
+        variables: { input: loginData },
+        authMode: 'API_KEY'
+      });
+    }
+
+    fetchLogins();
+  }
 
   async function fetchNotes() {
     const apiData = await API.graphql({ query: listNotes, authMode: 'AMAZON_COGNITO_USER_POOLS' }); //Need to include authMode here in addition to changning @auth in schema
@@ -49,7 +98,7 @@ const App = ({ signOut, user }) => {
   }
 
   async function fetchPosts() {
-    /// Replace the previous list posts query with a new one that includes likes -------------------------------------------------------
+    /// Replace the previous list posts query with a new one that includes likes
     const apiData = await API.graphql({ query: listPostsWithLikes, authMode: 'API_KEY' }); //Need to include a different authMode for public posts - using cognito or omitting causes error even though posts are public anyway 
     const postsFromAPI = apiData.data.listPosts.items;
     await Promise.all(
@@ -62,6 +111,12 @@ const App = ({ signOut, user }) => {
       })
     );
     setPosts(postsFromAPI);
+  }
+
+  async function fetchLogins() {
+    const apiData = await API.graphql({ query: listLogins, authMode: 'API_KEY' });
+    const loginsFromAPI = apiData.data.listLogins.items;
+    setLogins(loginsFromAPI);
   }
 
   async function createNote(event) {
@@ -102,7 +157,7 @@ const App = ({ signOut, user }) => {
     event.target.reset();
   }
 
-///Add a like - takes the id of the post it is called against and uses createLike graphql query to put creating user's name as a like
+  ///Add a like - takes the id of the post it is called against and uses createLike graphql query to put creating user's name as a like
   async function addLike({ id }) {
     const newLike = {
       content: user.username,
@@ -115,7 +170,6 @@ const App = ({ signOut, user }) => {
     });
     fetchPosts();
   }
-/// -----------------------------------------------------------------------------------------------------------------------------------
 
   async function deleteNote({ id, name }) {
     const newNotes = notes.filter((note) => note.id !== id);
@@ -128,20 +182,26 @@ const App = ({ signOut, user }) => {
     });
   }
 
-
-  /// New function to delete a like when passed its ID -----------------------------------------------------------
-  async function deleteLike({ id }) {
+  async function cleanupLike({ id }) {
     await API.graphql({
       query: deleteLikeMutation,
       variables: { input: { id } },
       authMode: 'API_KEY'
     });
   }
-  /// ------------------------------------------------------------------------------------------------------------
 
+  async function unLike( id ) {
+    await API.graphql({
+      query: deleteLikeMutation,
+      variables: { input: { id } },
+      authMode: 'API_KEY'
+    });
 
+    fetchPosts();
+  }
+  
   async function deletePost({ id, name, likes }) {
-    likes.items.map((like) => deleteLike(like)); /// Delete all the likes belonging to a post so they are not stranded with no matching post---------------------
+    likes.items.map((like) => cleanupLike(like)); /// Delete all the likes belonging to a post so they are not stranded with no matching post
 
     const newPosts = posts.filter((post) => post.id !== id);
     setPosts(newPosts);
@@ -153,6 +213,17 @@ const App = ({ signOut, user }) => {
     });
 }
 
+  async function deleteLogin({ id }) {
+    await API.graphql({
+      query: deleteLoginMutation,
+      variables: { input: { id } },
+      authMode: 'API_KEY'
+    });
+    fetchLogins();
+  }
+
+
+ 
   return (
     <View className="App">
 
@@ -250,6 +321,7 @@ const App = ({ signOut, user }) => {
       <Heading level={2}>Public Posts</Heading>
       <View margin="3rem 0">
       {posts.map((post) => (
+
         <Flex
         key={post.id || post.name}
         direction="row"
@@ -268,22 +340,45 @@ const App = ({ signOut, user }) => {
           />
             )}
           
-          {/* /// Take the likes array of this post and display each --------------------------------------------------- */}
           <Text as="strong" fontWeight={700}>Liked by:</Text>
           {post.likes.items.map((like) => (
-            <Text as="span">{like.content}</Text>
+            <Text as="span" key={like.id}>{like.content}</Text>
           ))}
-          {/* /// ------------------------------------------------------------------------------------------------------ */}
           
           <Button variation="link" onClick={() => deletePost(post)}>
             Delete post
           </Button>
+          
+          { !post.likes.items.map(like => like.content).includes(user.username) &&
+            <Button variation="link" onClick={() => addLike(post)}>
+              Like
+            </Button>
+          } 
 
-          {/* /// Add a like onto a given post ------------------------------------------------------------------------- */}
-          <Button variation="link" onClick={() => addLike(post)}>
-            Like
-          </Button>
-          {/* /// ------------------------------------------------------------------------------------------------------ */}
+          { post.likes.items.map(like => like.content).includes(user.username) &&
+            <Button variation="link" onClick={() => unLike(post.likes.items[post.likes.items.map(like => like.content).indexOf(user.username)].id)}>
+              Unlike
+            </Button>
+          }        
+          
+        </Flex>
+      ))}
+      </View>
+
+      <Heading level={2}>User Activity</Heading>
+      <View margin="3rem 0">
+      {logins.map((login) => (
+        <Flex
+        key={login.id || login.name}
+        direction="row"
+        justifyContent="center"
+        alignItems="center"
+        >
+          <Text as="strong" fontWeight={700}>
+            {login.userName}
+          </Text>
+          <Text as="span">{new Date(1000 * login.loginTime).toISOString()}</Text>
+          <Button variation="link" onClick={() => deleteLogin(login)}>Delete Login</Button>
 
         </Flex>
       ))}

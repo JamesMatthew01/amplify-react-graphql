@@ -181,3 +181,36 @@ export const onDeleteLike = /* GraphQL */ `
     }
   }
 `;
+export const onCreateLogin = /* GraphQL */ `
+  subscription OnCreateLogin($filter: ModelSubscriptionLoginFilterInput) {
+    onCreateLogin(filter: $filter) {
+      id
+      userName
+      loginTime
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onUpdateLogin = /* GraphQL */ `
+  subscription OnUpdateLogin($filter: ModelSubscriptionLoginFilterInput) {
+    onUpdateLogin(filter: $filter) {
+      id
+      userName
+      loginTime
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onDeleteLogin = /* GraphQL */ `
+  subscription OnDeleteLogin($filter: ModelSubscriptionLoginFilterInput) {
+    onDeleteLogin(filter: $filter) {
+      id
+      userName
+      loginTime
+      createdAt
+      updatedAt
+    }
+  }
+`;
