@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import "@aws-amplify/ui-react/styles.css";
 import { listNotes, listLogins } from "./graphql/queries";
@@ -33,56 +33,64 @@ const App = ({ signOut, user }) => {
   const [posts, setPosts] = useState([]);
   const [logins, setLogins] = useState([]);
 
+  const login = useRef(0);
+
   useEffect(() => {
-    loginHandler(); //added call to session handler that uploads login to database
-    fetchNotes();
-    fetchPosts();
-  }, []);
 
-  async function loginHandler() {
-    const token = await Auth.currentSession();
-    
-    const filterByUser = {
-      filter: {
-        userName: {
-          eq: user.username
-        }
-      }
-    };
+    async function loginHandler(ref) { //define this function inside the useEffect as it is called here
 
-    const previousLogin = await API.graphql({ query: listLogins, authMode: 'API_KEY', variables: filterByUser });
-    
-    if(previousLogin && previousLogin.data.listLogins.items.length > 0) {
-      console.log("Updating an entry")
-      const loginData = {
-        id: previousLogin.data.listLogins.items[0].id,
-        loginTime: token.getAccessToken().payload.auth_time
-      };
-
-      await API.graphql({
-        query: updateLoginMutation,
-        variables: { input: loginData },
-        authMode: 'API_KEY'
-      });
-
-    } else {
-      console.log("Creating the entry")
-      const loginData = {
-        userName: user.username,
-        loginTime: token.getAccessToken().payload.auth_time
-      };
+      if(ref === 0){ //if not prior call to this function then create login record
+        const token = await Auth.currentSession();
       
-      await API.graphql({
-        query: createLoginMutation,
-        variables: { input: loginData },
-        authMode: 'API_KEY'
-      });
+        const filterByUser = {
+          filter: {
+            userName: {
+              eq: user.username
+            }
+          }
+        };
+  
+        const previousLogin = await API.graphql({ query: listLogins, authMode: 'API_KEY', variables: filterByUser }); //fetch current user logins
+      
+        if(previousLogin && previousLogin.data.listLogins.items.length > 0) { //update current user login if it exists
+          const loginData = {
+            id: previousLogin.data.listLogins.items[0].id,
+            loginTime: token.getAccessToken().payload.auth_time
+          };
+  
+          await API.graphql({
+            query: updateLoginMutation,
+            variables: { input: loginData },
+            authMode: 'API_KEY'
+          });
+  
+        } else { //create user login record on first login
+          const loginData = {
+            userName: user.username,
+            loginTime: token.getAccessToken().payload.auth_time
+          };
+        
+          await API.graphql({
+            query: createLoginMutation,
+            variables: { input: loginData },
+            authMode: 'API_KEY'
+          });
+        }
+  
+      }
+  
+      fetchLogins();
     }
 
-    fetchLogins();
-  }
+    loginHandler(login.current); //added call to session handler that uploads login to database
+    login.current = 1; //ref to track if loginHandler has already been called - prevents multiple login records being created due to React strict mode calling effects twice
+    fetchNotes();
+    fetchPosts();
+  }, [login, user]);
 
-  async function fetchNotes() {
+  
+
+  async function fetchNotes() { //safe to define the fetch functions outside useEffect
     const apiData = await API.graphql({ query: listNotes, authMode: 'AMAZON_COGNITO_USER_POOLS' }); //Need to include authMode here in addition to changning @auth in schema
     const notesFromAPI = apiData.data.listNotes.items;
     await Promise.all(
@@ -98,8 +106,8 @@ const App = ({ signOut, user }) => {
   }
 
   async function fetchPosts() {
-    /// Replace the previous list posts query with a new one that includes likes
-    const apiData = await API.graphql({ query: listPostsWithLikes, authMode: 'API_KEY' }); //Need to include a different authMode for public posts - using cognito or omitting causes error even though posts are public anyway 
+    // Use a custom list query that also fetches likes belonging to each post
+    const apiData = await API.graphql({ query: listPostsWithLikes, authMode: 'API_KEY' }); //Need to include API_KEY authMode for public posts 
     const postsFromAPI = apiData.data.listPosts.items;
     await Promise.all(
       postsFromAPI.map(async (post) => {
@@ -157,8 +165,7 @@ const App = ({ signOut, user }) => {
     event.target.reset();
   }
 
-  ///Add a like - takes the id of the post it is called against and uses createLike graphql query to put creating user's name as a like
-  async function addLike({ id }) {
+  async function addLike({ id }) { //Add a like - uses id of the post it is called against and createLike graphql query to put creating user's name as 'content' field in like
     const newLike = {
       content: user.username,
       postLikesId: id
@@ -182,7 +189,7 @@ const App = ({ signOut, user }) => {
     });
   }
 
-  async function cleanupLike({ id }) {
+  async function cleanupLike({ id }) { //remove like with given ID but do not fetch posts - called as part of deleting a post
     await API.graphql({
       query: deleteLikeMutation,
       variables: { input: { id } },
@@ -190,7 +197,7 @@ const App = ({ signOut, user }) => {
     });
   }
 
-  async function unLike( id ) {
+  async function unLike( id ) { //remove like with given ID and refresh posts (and so also refresh likes) - called when user unlikes a post
     await API.graphql({
       query: deleteLikeMutation,
       variables: { input: { id } },
@@ -213,7 +220,7 @@ const App = ({ signOut, user }) => {
     });
 }
 
-  async function deleteLogin({ id }) {
+  async function deleteLogin({ id }) { //delete login - included to help debug the logins tracker by allowing deletion of login records on the frontend
     await API.graphql({
       query: deleteLoginMutation,
       variables: { input: { id } },
@@ -349,13 +356,13 @@ const App = ({ signOut, user }) => {
             Delete post
           </Button>
           
-          { !post.likes.items.map(like => like.content).includes(user.username) &&
+          { !post.likes.items.map(like => like.content).includes(user.username) && //if the post has no like from the current user display like button
             <Button variation="link" onClick={() => addLike(post)}>
               Like
             </Button>
           } 
 
-          { post.likes.items.map(like => like.content).includes(user.username) &&
+          { post.likes.items.map(like => like.content).includes(user.username) && //else display unlike button - onClick will identify the id of the like and pass it to unLike function
             <Button variation="link" onClick={() => unLike(post.likes.items[post.likes.items.map(like => like.content).indexOf(user.username)].id)}>
               Unlike
             </Button>
