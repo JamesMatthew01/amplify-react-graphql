@@ -15,9 +15,9 @@ export const listPostsWithLikes = /* GraphQL */ `
             items {
               id
               content
+              postID
               createdAt
               updatedAt
-              postLikesId
             }
             nextToken
         }

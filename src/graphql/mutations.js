@@ -63,9 +63,9 @@ export const createPost = /* GraphQL */ `
         items {
           id
           content
+          postID
           createdAt
           updatedAt
-          postLikesId
         }
         nextToken
       }
@@ -88,9 +88,9 @@ export const updatePost = /* GraphQL */ `
         items {
           id
           content
+          postID
           createdAt
           updatedAt
-          postLikesId
         }
         nextToken
       }
@@ -113,9 +113,9 @@ export const deletePost = /* GraphQL */ `
         items {
           id
           content
+          postID
           createdAt
           updatedAt
-          postLikesId
         }
         nextToken
       }
@@ -143,9 +143,9 @@ export const createLike = /* GraphQL */ `
         createdAt
         updatedAt
       }
+      postID
       createdAt
       updatedAt
-      postLikesId
     }
   }
 `;
@@ -168,9 +168,9 @@ export const updateLike = /* GraphQL */ `
         createdAt
         updatedAt
       }
+      postID
       createdAt
       updatedAt
-      postLikesId
     }
   }
 `;
@@ -193,9 +193,9 @@ export const deleteLike = /* GraphQL */ `
         createdAt
         updatedAt
       }
+      postID
       createdAt
       updatedAt
-      postLikesId
     }
   }
 `;

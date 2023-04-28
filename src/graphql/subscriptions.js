@@ -60,9 +60,9 @@ export const onCreatePost = /* GraphQL */ `
         items {
           id
           content
+          postID
           createdAt
           updatedAt
-          postLikesId
         }
         nextToken
       }
@@ -82,9 +82,9 @@ export const onUpdatePost = /* GraphQL */ `
         items {
           id
           content
+          postID
           createdAt
           updatedAt
-          postLikesId
         }
         nextToken
       }
@@ -104,9 +104,9 @@ export const onDeletePost = /* GraphQL */ `
         items {
           id
           content
+          postID
           createdAt
           updatedAt
-          postLikesId
         }
         nextToken
       }
@@ -131,9 +131,9 @@ export const onCreateLike = /* GraphQL */ `
         createdAt
         updatedAt
       }
+      postID
       createdAt
       updatedAt
-      postLikesId
     }
   }
 `;
@@ -153,9 +153,9 @@ export const onUpdateLike = /* GraphQL */ `
         createdAt
         updatedAt
       }
+      postID
       createdAt
       updatedAt
-      postLikesId
     }
   }
 `;
@@ -175,9 +175,9 @@ export const onDeleteLike = /* GraphQL */ `
         createdAt
         updatedAt
       }
+      postID
       createdAt
       updatedAt
-      postLikesId
     }
   }
 `;

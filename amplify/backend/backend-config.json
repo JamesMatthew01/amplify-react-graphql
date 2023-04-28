@@ -14,10 +14,13 @@
         "authConfig": {
           "additionalAuthenticationProviders": [
             {
+              "authenticationType": "AWS_IAM"
+            },
+            {
               "apiKeyConfig": {
-                "apiKeyExpirationDate": "2024-02-08T18:53:46.131Z",
+                "apiKeyExpirationDate": "2024-04-26T20:01:29.931Z",
                 "apiKeyExpirationDays": 365,
-                "description": "08022023Key"
+                "description": "apikey"
               },
               "authenticationType": "API_KEY"
             }
@@ -50,9 +53,7 @@
         "signupAttributes": [
           "EMAIL"
         ],
-        "socialProviders": [
-          "GOOGLE"
-        ],
+        "socialProviders": [],
         "usernameAttributes": [],
         "verificationMechanisms": [
           "EMAIL"
@@ -60,6 +61,22 @@
       },
       "providerPlugin": "awscloudformation",
       "service": "Cognito"
+    },
+    "userPoolGroups": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId",
+            "AppClientIDWeb",
+            "AppClientID",
+            "IdentityPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "amplifyreactgraphqlea327ffd"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Cognito-UserPool-Groups"
     }
   },
   "storage": {

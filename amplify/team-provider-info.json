@@ -13,7 +13,8 @@
     },
     "categories": {
       "auth": {
-        "amplifyreactgraphqlea327ffd": {}
+        "amplifyreactgraphqlea327ffd": {},
+        "userPoolGroups": {}
       },
       "api": {
         "amplifyreactgraphql": {}
