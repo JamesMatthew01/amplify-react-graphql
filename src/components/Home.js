@@ -20,27 +20,34 @@ export function Home() {
   const [logins, setLogins] = useState([]);
   const { route, user } = useAuthenticator((context) => [context.route, context.user]);
   const loginRef = useRef(0);
-console.log(loginRef);
-  async function fetchLogins() {
-    const apiData = await API.graphql({ query: listLogins, authMode: 'API_KEY' });
+  
+  async function refreshLogins() {
+    const apiData = await API.graphql({ query: listLogins, authMode: 'AMAZON_COGNITO_USER_POOLS' });
     const loginsFromAPI = apiData.data.listLogins.items;
     setLogins(loginsFromAPI);
   }
-  
+
   async function deleteLogin({ id }) { //delete login - included to help debug the logins tracker by allowing deletion of login records on the frontend
     await API.graphql({
       query: deleteLoginMutation,
       variables: { input: { id } },
       authMode: 'AMAZON_COGNITO_USER_POOLS'
     });
-    fetchLogins();
+    refreshLogins();
   }
 
   useEffect(() => {
 
+    async function fetchLogins() {
+      const apiData = await API.graphql({ query: listLogins, authMode: route === 'authenticated' ? 'AMAZON_COGNITO_USER_POOLS' : 'AWS_IAM' });
+      const loginsFromAPI = apiData.data.listLogins.items;
+      setLogins(loginsFromAPI);
+    }
+
     async function loginHandler(route, loginRef) { //define this function inside the useEffect as it is called here
       if(route === "authenticated" && loginRef.current === 0){
         const token = await Auth.currentSession();
+        console.log(token.getAccessToken());
     
         const filterByUser = {
           filter: {
@@ -50,7 +57,7 @@ console.log(loginRef);
           }
         };
 
-        const previousLogin = await API.graphql({ query: listLogins, authMode: 'API_KEY', variables: filterByUser }); //fetch current user logins
+        const previousLogin = await API.graphql({ query: listLogins, authMode: 'AMAZON_COGNITO_USER_POOLS', variables: filterByUser }); //fetch current user logins
     
         if(previousLogin && previousLogin.data.listLogins.items.length > 0) { //update current user login if it exists
           const loginData = {
@@ -87,6 +94,8 @@ console.log(loginRef);
     loginHandler(route, loginRef); //call to session handler that uploads login to database
     loginRef.current = 1;
   }, [route, user]);
+
+
 
   return (
     <View>

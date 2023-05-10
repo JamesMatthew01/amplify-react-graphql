@@ -21,9 +21,9 @@ export function PublicBoard() {
   const [posts, setPosts] = useState([]);
   const { route, user } = useAuthenticator((context) => [context.route, context.user]);
   
-  async function fetchPosts() {
+  async function refreshPosts() {
     // Use a custom list query that also fetches likes belonging to each post
-    const apiData = await API.graphql({ query: listPostsWithLikes, authMode: 'API_KEY' }); //Need to include API_KEY authMode for public posts 
+    const apiData = await API.graphql({ query: listPostsWithLikes, authMode: 'AMAZON_COGNITO_USER_POOLS' }); //Need to include API_KEY authMode for public posts 
     const postsFromAPI = apiData.data.listPosts.items;
     await Promise.all(
       postsFromAPI.map(async (post) => {
@@ -52,7 +52,7 @@ export function PublicBoard() {
       variables: { input: data },
       authMode: 'AMAZON_COGNITO_USER_POOLS'
     });
-    fetchPosts();
+    refreshPosts();
     event.target.reset();
   }
 
@@ -66,7 +66,7 @@ export function PublicBoard() {
       variables: { input: newLike},
       authMode: 'AMAZON_COGNITO_USER_POOLS'
     });
-    fetchPosts();
+    refreshPosts();
   }
 
   async function unLike( id ) { //remove like with given ID and refresh posts (and so also refresh likes) - called when user unlikes a post
@@ -76,7 +76,7 @@ export function PublicBoard() {
       authMode: 'AMAZON_COGNITO_USER_POOLS'
     });
 
-    fetchPosts();
+    refreshPosts();
   }
 
   async function cleanupLike({ id }) { //remove like with given ID but do not fetch posts - called as part of deleting a post
@@ -101,8 +101,24 @@ export function PublicBoard() {
   }
 
   useEffect(() => {
+    async function fetchPosts() {
+      // Use a custom list query that also fetches likes belonging to each post
+      const apiData = await API.graphql({ query: listPostsWithLikes, authMode: route === 'authenticated' ? 'AMAZON_COGNITO_USER_POOLS' : 'AWS_IAM' }); //Need to include API_KEY authMode for public posts 
+      const postsFromAPI = apiData.data.listPosts.items;
+      await Promise.all(
+        postsFromAPI.map(async (post) => {
+          if (post.image) {
+            const url = await Storage.get(post.name);
+            post.image = url;
+          }
+          return post;
+        })
+      );
+      setPosts(postsFromAPI);
+    }
+
     fetchPosts();
-  }, []);
+  }, [route]);
 
   return(
 

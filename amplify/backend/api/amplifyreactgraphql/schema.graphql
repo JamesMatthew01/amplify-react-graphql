@@ -5,7 +5,7 @@ type Note @model @auth(rules: [{allow: owner, operations: [create, read, update,
   image: String
 }
 
-type Post @model @auth(rules: [{allow: public, operations: [read]}, {allow: private, operations: [create, read, update, delete]}]) {
+type Post @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, operations: [create, read, update, delete]}]) {
   id: ID!
   name: String!
   description: String
@@ -13,14 +13,14 @@ type Post @model @auth(rules: [{allow: public, operations: [read]}, {allow: priv
   likes: [Like] @hasMany(indexName: "byPost", fields: ["id"])
 }
 
-type Like @model @auth(rules: [{allow: public, operations: [read]}, {allow: private, operations: [create, read, update, delete]}]) {
+type Like @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, operations: [create, read, update, delete]}]) {
   id: ID!
   content: String!
   post: Post @belongsTo
   postID: ID! @index(name: "byPost")
 }
 
-type Login @model @auth(rules: [{allow: public, operations: [read]}, {allow: private, operations: [create, read, update, delete]}]) {
+type Login @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, operations: [create, read, update, delete]}]) {
   id: ID!
   userName: String!
   loginTime: Int!
