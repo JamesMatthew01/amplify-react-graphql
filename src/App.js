@@ -14,8 +14,7 @@ import './App.css';
 
 function MyRoutes() {
   const { user } = useAuthenticator((context) => [context.user]);
-  console.log(user)
-
+  
   return (
     <BrowserRouter>
       <Routes>

@@ -1,0 +1,17 @@
+{
+  "trigger": true,
+  "modules": [
+    "custom"
+  ],
+  "parentResource": "amplifyreactgraphqlea327ffd",
+  "functionName": "amplifyreactgraphqlea327ffdPostConfirmation",
+  "resourceName": "amplifyreactgraphqlea327ffdPostConfirmation",
+  "parentStack": "auth",
+  "triggerEnvs": [],
+  "triggerDir": "C:\\snapshot\\repo\\build\\node_modules\\@aws-amplify\\amplify-category-auth\\provider-utils\\awscloudformation\\triggers\\PostConfirmation",
+  "triggerTemplate": "PostConfirmation.json.ejs",
+  "triggerEventPath": "PostConfirmation.event.json",
+  "roleName": "amplifyreactgraphqlea327ffdPostConfirmation",
+  "skipEdit": true,
+  "enableCors": false
+}

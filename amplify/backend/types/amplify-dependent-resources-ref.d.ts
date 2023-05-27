@@ -19,6 +19,15 @@ export type AmplifyDependentResourcesAttributes = {
       "TestGroupGroupRole": "string"
     }
   },
+  "function": {
+    "amplifyreactgraphqlea327ffdPostConfirmation": {
+      "Arn": "string",
+      "LambdaExecutionRole": "string",
+      "LambdaExecutionRoleArn": "string",
+      "Name": "string",
+      "Region": "string"
+    }
+  },
   "storage": {
     "imagestorage": {
       "BucketName": "string",

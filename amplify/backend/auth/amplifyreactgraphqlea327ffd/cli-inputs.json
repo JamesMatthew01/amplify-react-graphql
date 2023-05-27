@@ -52,16 +52,31 @@
       ]
     },
     "breakCircularDependency": true,
-    "dependsOn": [],
+    "dependsOn": [
+      {
+        "category": "function",
+        "resourceName": "amplifyreactgraphqlea327ffdPostConfirmation",
+        "triggerProvider": "Cognito",
+        "attributes": [
+          "Arn",
+          "Name"
+        ]
+      }
+    ],
     "userPoolGroups": false,
     "adminQueries": false,
     "thirdPartyAuth": false,
     "authProviders": [],
     "hostedUI": false,
-    "triggers": {},
+    "triggers": {
+      "PostConfirmation": [
+        "custom"
+      ]
+    },
     "parentStack": {
       "Ref": "AWS::StackId"
     },
-    "permissions": []
+    "permissions": [],
+    "authTriggerConnections": "[\n  {\n    \"triggerType\": \"PostConfirmation\",\n    \"lambdaFunctionName\": \"amplifyreactgraphqlea327ffdPostConfirmation\"\n  }\n]"
   }
 }
